@@ -42,22 +42,22 @@
 		"check": "biome check --apply-unsafe ."
 	},
 	"devDependencies": {
-		"@astrojs/check": "^0.9.10",
+		"@astrojs/check": "^0.9.12",
 		"@biomejs/biome": "1.7.3",
-		"@tailwindcss/typography": "^0.5.13",
-		"astro": "^7.1.5",
-		"postcss": "^8.4.31",
-		"tailwindcss": "^4.1.14",
-		"typescript": "^5.4.5",
-		"vite": "^7.3.3"
+		"@tailwindcss/typography": "^0.5.20",
+		"astro": "^7.4.4",
+		"postcss": "^8.5.32",
+		"tailwindcss": "^4.3.3",
+		"typescript": "^5.9.3",
+		"vite": "^7.3.7"
 	},
 	"dependencies": {
-		"@astrojs/mdx": "^7.0.5",
+		"@astrojs/mdx": "^7.0.8",
 		"@astrojs/rss": "^4.0.19",
-		"@astrojs/sitemap": "^3.7.3",
-		"@lucide/astro": "^1.27.0",
+		"@astrojs/sitemap": "^3.7.4",
+		"@lucide/astro": "^1.65.0",
 		"@orama/orama": "^3.1.18",
-		"@tailwindcss/vite": "^4.1.14",
+		"@tailwindcss/vite": "^4.3.3",
 		"sharp": "^0.35.5"
 	},
 	"allowScripts": {
