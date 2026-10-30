@@ -1,0 +1,23 @@
+---
+import { getCollection } from 'astro:content';
+import Layout from '@/layouts/Layout.astro';
+import { ArrowRight, ArrowUpRight, BookOpen } from '@lucide/astro';
+const posts = (await getCollection('post')).sort((a, b) => b.data.publishDate.valueOf() - a.data.publishDate.valueOf());
+const featured = posts.find(post => post.data.featured) || posts[0];
+const recent = posts.filter(post => post.id !== featured?.id);
+const date = (value: Date) => value.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+---
+<Layout title="The Reading Room — A place for good ideas" description="A quiet corner for notes, ideas, and things worth returning to.">
+  <main class="reading-home">
+    <div class="masthead"><a href="/" class="wordmark">The Reading Room<span>.</span></a><span class="masthead-note">A blog for curious minds</span></div>
+    <section class="intro">
+      <div class="intro-copy"><div class="eyebrow"><span></span> A LITTLE SPACE ON THE INTERNET</div><h1>For the ideas<br /><em>worth keeping.</em></h1><p>A quiet corner for notes, ideas, and things worth coming back to. Pull up a chair and stay a while.</p><a class="intro-link" href="#latest">Explore the writing <ArrowRight size={16} /></a></div>
+      <div class="intro-art" aria-hidden="true"><div class="art-frame"><div class="art-sun"></div><div class="art-book"><BookOpen size={88} stroke-width={0.8}/></div><span>TAKE YOUR TIME</span></div></div>
+    </section>
+    {featured && <section class="featured-section"><div class="section-label"><span>THE FEATURED STORY</span><span>01 / {String(posts.length).padStart(2,'0')}</span></div><a href={`/blog/${featured.id}`} class="featured-card"><div class="featured-content"><div class="post-kicker"><span class="pill">{featured.data.tags?.[0] || 'Notes'}</span><span>{date(featured.data.publishDate)}</span></div><h2>{featured.data.title}</h2><p>{featured.data.description}</p><span class="read-link">Read the story <ArrowRight size={16} /></span></div><div class="featured-image"><img src={featured.data.img || '/assets/blog/cover.jpg'} alt={featured.data.img_alt || ''} /></div></a></section>}
+    <section id="latest" class="latest-section"><div class="latest-heading"><div><div class="eyebrow"><span></span> FROM THE JOURNAL</div><h2>Latest writing<span>.</span></h2><p>Notes, stories, and ideas from the archive.</p></div><a href="/blog">View all writing <ArrowRight size={15} /></a></div>
+      <div class="post-list">{recent.map((post, index) => <article class="post-row"><span class="post-number">{String(index + 1).padStart(2,'0')}</span><div class="post-row-main"><div class="post-kicker"><span>{post.data.tags?.[0] || 'Notes'}</span><span>·</span><time datetime={post.data.publishDate.toISOString()}>{date(post.data.publishDate)}</time>{post.data.read && <><span>·</span><span>{post.data.read} min read</span></>}</div><h3><a href={`/blog/${post.id}`}>{post.data.title}</a></h3><p>{post.data.description}</p></div><a href={`/blog/${post.id}`} class="row-arrow" aria-label={`Read ${post.data.title}`}><ArrowUpRight size={19}/></a></article>)}</div>
+    </section>
+    <aside class="closing-note"><div class="closing-icon">✳</div><div><h2>Thanks for stopping by.</h2><p>There's always something new to discover in the archive.</p></div><a href="/blog">Browse the journal <ArrowRight size={16}/></a></aside>
+  </main>
+</Layout>

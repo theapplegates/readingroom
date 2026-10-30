@@ -1,0 +1,50 @@
+---
+import { themes, themeSettings } from '@/config/themes';
+import { Search, Moon, SunMedium, ChevronDown } from '@lucide/astro';
+const tokenMap = Object.fromEntries(themes.map((theme) => [theme.id, theme.tokens]));
+---
+<header class="blog-nav">
+  <div class="nav-inner">
+    <div class="theme-control">
+      <span class="theme-dot" aria-hidden="true"></span>
+      <label for="theme-select" class="sr-only">Choose a color theme</label>
+      <select id="theme-select" aria-label="Choose a color theme">
+        {themes.map((theme) => <option value={theme.id} selected={theme.id === themeSettings.defaultThemeId}>{theme.name}</option>)}
+      </select>
+      <ChevronDown size={14} aria-hidden="true" />
+    </div>
+    <nav aria-label="Main navigation" class="nav-links">
+      <a href="/">Home</a><a href="/blog">Writing</a>
+    </nav>
+    <div class="nav-actions">
+      <button type="button" class="search-trigger" data-search-open aria-label="Search the blog"><Search size={17} /><span>Search</span><kbd>⌘ K</kbd></button>
+      <button type="button" class="mode-toggle" aria-label="Toggle dark mode" title="Toggle dark mode"><Moon size={17} class="moon-icon" /><SunMedium size={17} class="sun-icon" /></button>
+    </div>
+  </div>
+</header>
+<script define:vars={{ tokenMap, themeSettings }}>
+  const selector = document.querySelector('#theme-select');
+  const mode = document.querySelector('.mode-toggle');
+  const root = document.documentElement;
+  const sync = () => {
+    const theme = root.dataset.theme || themeSettings.defaultThemeId;
+    selector.value = theme;
+    const tokens = tokenMap[theme]?.[root.classList.contains('dark') ? 'dark' : 'light'];
+    if (tokens) Object.entries(tokens).forEach(([key, value]) => root.style.setProperty(key, value));
+    mode.setAttribute('aria-pressed', String(root.classList.contains('dark')));
+  };
+  selector.addEventListener('change', () => {
+    root.dataset.theme = selector.value;
+    if (themeSettings.persistUserSelection) {
+      localStorage.setItem(themeSettings.storageKey, selector.value);
+      document.cookie = `${themeSettings.cookieName}=${selector.value}; path=/; max-age=31536000; SameSite=Lax`;
+    }
+    sync();
+  });
+  mode.addEventListener('click', () => {
+    root.classList.toggle('dark');
+    localStorage.setItem('dark_mode', String(root.classList.contains('dark')));
+    sync();
+  });
+  sync();
+</script>

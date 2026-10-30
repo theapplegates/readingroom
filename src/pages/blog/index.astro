@@ -1,0 +1,9 @@
+---
+import { getCollection } from 'astro:content';
+import Layout from '@/layouts/Layout.astro';
+import { ArrowUpRight } from '@lucide/astro';
+const posts = (await getCollection('post')).sort((a, b) => b.data.publishDate.valueOf() - a.data.publishDate.valueOf());
+---
+<Layout title="All writing — The Reading Room" description="Browse the complete archive.">
+<main class="reading-home archive-page"><div class="masthead"><a href="/" class="wordmark">The Reading Room<span>.</span></a><span class="masthead-note">A blog for curious minds</span></div><div class="archive-intro"><div class="eyebrow"><span></span> THE JOURNAL</div><h1>All the writing<span>.</span></h1><p>Notes, stories, and ideas from the archive.</p></div><div class="post-list">{posts.map((post, index) => <article class="post-row"><span class="post-number">{String(index + 1).padStart(2,'0')}</span><div class="post-row-main"><div class="post-kicker"><span>{post.data.tags?.[0] || 'Notes'}</span><span>·</span><time datetime={post.data.publishDate.toISOString()}>{post.data.publishDate.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric', timeZone:'UTC' })}</time>{post.data.read && <><span>·</span><span>{post.data.read} min read</span></>}</div><h2><a href={`/blog/${post.id}`}>{post.data.title}</a></h2><p>{post.data.description}</p></div><a href={`/blog/${post.id}`} class="row-arrow" aria-label={`Read ${post.data.title}`}><ArrowUpRight size={19}/></a></article>)}</div></main>
+</Layout>

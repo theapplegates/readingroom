@@ -1,0 +1,67 @@
+---
+import { Search, X } from '@lucide/astro';
+---
+<dialog class="search-dialog" aria-label="Search the blog" data-search-dialog>
+  <div class="search-top"><Search size={19} /><label for="search-input" class="sr-only">Search the blog</label><input id="search-input" type="search" placeholder="Search the blog…" autocomplete="off" /><button type="button" data-search-close aria-label="Close search"><X size={18}/></button></div>
+  <div class="search-body"><p class="search-message" data-search-message>Search titles, topics, and the full text of every story.</p><ul class="search-results" data-search-results></ul></div>
+  <div class="search-bottom"><span data-search-count>Search the journal</span><span>ESC to close</span></div>
+</dialog>
+<script>
+  import type { AnyOrama } from '@orama/orama';
+  type SearchDocument = { id: string; title: string; description: string; category: string; href: string; headings: string[]; content: string };
+  const dialog = document.querySelector<HTMLDialogElement>('[data-search-dialog]')!;
+  const input = dialog.querySelector<HTMLInputElement>('#search-input')!;
+  const message = dialog.querySelector<HTMLElement>('[data-search-message]')!;
+  const list = dialog.querySelector<HTMLUListElement>('[data-search-results]')!;
+  const count = dialog.querySelector<HTMLElement>('[data-search-count]')!;
+  let database: AnyOrama | null = null;
+  let request: Promise<AnyOrama> | null = null;
+  let version = 0;
+  async function load() {
+    if (database) return database;
+    if (!request) request = (async () => {
+      const [{ create, insertMultiple }, response] = await Promise.all([import('@orama/orama'), fetch('/search-index.json')]);
+      if (!response.ok) throw new Error('Search index unavailable');
+      const documents: SearchDocument[] = await response.json();
+      const db = create({ schema: { title: 'string', description: 'string', category: 'string', headings: 'string[]', content: 'string' } });
+      await insertMultiple(db, documents);
+      database = db;
+      return db;
+    })().catch(error => { request = null; throw error; });
+    return request;
+  }
+  async function run() {
+    const query = input.value.trim();
+    const current = ++version;
+    list.replaceChildren();
+    if (!query) { message.textContent = 'Search titles, topics, and the full text of every story.'; count.textContent = 'Search the journal'; return; }
+    message.textContent = 'Searching…';
+    try {
+      const [db, { search }] = await Promise.all([load(), import('@orama/orama')]);
+      const result = await search(db, { term: query, properties: ['title','headings','description','category','content'], boost: { title: 8, headings: 4, description: 3, category: 2, content: 1 }, tolerance: query.length >= 7 ? 2 : query.length >= 5 ? 1 : 0, limit: 12 });
+      if (current !== version) return;
+      message.textContent = result.count ? '' : `No results for “${query}”. Try a different word.`;
+      count.textContent = `${result.count} ${result.count === 1 ? 'result' : 'results'}`;
+      for (const hit of result.hits) {
+        const post = hit.document as SearchDocument;
+        const li = document.createElement('li');
+        const link = document.createElement('a'); link.href = post.href;
+        const title = document.createElement('strong'); title.textContent = post.title;
+        const desc = document.createElement('span'); desc.textContent = post.description;
+        const category = document.createElement('small'); category.textContent = post.category;
+        link.append(category, title, desc); li.append(link); list.append(li);
+      }
+    } catch {
+      if (current !== version) return;
+      message.textContent = 'Search is unavailable. Please try again.';
+      count.textContent = 'Search the journal';
+    }
+  }
+  function open() { if (!dialog.open) dialog.showModal(); input.focus(); }
+  document.querySelectorAll('[data-search-open]').forEach(button => button.addEventListener('click', open));
+  dialog.querySelector('[data-search-close]')?.addEventListener('click', () => dialog.close());
+  dialog.addEventListener('click', event => { if (event.target === dialog) dialog.close(); });
+  document.addEventListener('keydown', event => { if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') { event.preventDefault(); open(); } });
+  input.addEventListener('input', run);
+  input.addEventListener('keydown', event => { if (event.key === 'ArrowDown') { const first = list.querySelector<HTMLAnchorElement>('a'); if (first) { event.preventDefault(); first.focus(); } } });
+</script>
